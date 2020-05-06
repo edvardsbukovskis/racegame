@@ -7,7 +7,9 @@
 #define WINDOW_HEIGHT (540)
 
 // speed in pixels/second
-#define SPEED (300)
+
+#define MAXSPEED (8)
+
 
 int main(void)
 {
@@ -76,16 +78,21 @@ int main(void)
     dest.h /= 18;
 
     // start sprite in center of screen
-    float x_pos = (WINDOW_WIDTH - dest.w) / 2;
-    float y_pos = (WINDOW_HEIGHT - dest.h) / 2;
-    float x_vel = 0;
-    float y_vel = 0;
+    float x_pos = (WINDOW_WIDTH - dest.w) -50 ;
+    float y_pos = (WINDOW_HEIGHT - dest.h) - 150 ;
 
     // keep track of which inputs are given
     int up = 0;
     int down = 0;
     int left = 0;
     int right = 0;
+
+    float speed = 0;
+    float acc = 0.05;
+    float dec= 0.03;
+    float angle = 0;
+    float rotateSpeed =0.15;
+    
 
     // set to 1 when window close button is pressed
     int close_requested = 0;
@@ -108,6 +115,7 @@ int main(void)
                 case SDL_SCANCODE_W:
                 case SDL_SCANCODE_UP:
                     up = 1;
+                    speed +=acc;
                     break;
                 case SDL_SCANCODE_A:
                 case SDL_SCANCODE_LEFT:
@@ -147,16 +155,28 @@ int main(void)
             }
         }
 
-        // determine velocity
-        x_vel = y_vel = 0;
-        if (up && !down) y_vel = -SPEED;
-        if (down && !up) y_vel = SPEED;
-        if (left && !right) x_vel = -SPEED;
-        if (right && !left) x_vel = SPEED;
+        // determine speed
+        if (up && speed < MAXSPEED){
+            if (speed < 0) speed += dec;
+            else speed += acc;
+        }
+        if (down && speed > -MAXSPEED){
+            if (speed > 0) speed -=dec;
+            else speed -= acc;
+        }
+        if (!up && !down){
+            if (speed - dec > 0) speed -=dec;
+            else if (speed + dec < 0) speed +=dec;
+            else speed = 0;
+        }
+
+        //determine angle of rotation
+        if (right && speed != 0) angle += rotateSpeed * speed/MAXSPEED;
+        if(left && speed != 0) angle -= rotateSpeed * speed/MAXSPEED;
 
         // update positions
-        x_pos += x_vel / 60;
-        y_pos += y_vel / 60;
+        x_pos += sin(angle) * speed;
+        y_pos -= cos(angle) * speed;
 
         // collision detection with bounds
         if (x_pos <= 0) x_pos = 0;
@@ -174,7 +194,7 @@ int main(void)
         SDL_RenderCopy(rend, bkgTexture, NULL, NULL);
 
         // draw the image to the window
-        SDL_RenderCopy(rend, carTexture, NULL, &dest);
+        SDL_RenderCopyEx(rend, carTexture, NULL, &dest, angle*180/3.141592, NULL, SDL_FLIP_NONE);
         SDL_RenderPresent(rend);
 
         // wait 1/60th of a second
