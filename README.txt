@@ -1,3 +1,15 @@
+Creators:
+LU DF students Andris Lapiņš and Edvards Bukovskis
+
+
+
+
+
+
+
+
+
+
 To install SDL/SDL2 rune these commands:
 
 #install sdl2
